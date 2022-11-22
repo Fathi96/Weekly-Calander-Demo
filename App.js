@@ -30,6 +30,7 @@ export default function App() {
             console.log("FOUND USER DATA : ", userData);
             setFirstName(userData.firstName);
             setLastName(userData.lastName);
+            return existingDataArray;
           } else {
             setFirstName("");
             setLastName("");
@@ -70,13 +71,61 @@ export default function App() {
     getData();
   };
 
+  const updateData = async () => {
+    try {
+      const existingData = await AsyncStorage.getItem("data");
+
+      if (existingData) {
+        const existingDataArray = JSON.parse(existingData);
+
+        const newArr = existingDataArray.map((obj) => {
+          if (obj.date === date) {
+            return { ...obj, firstName: firstName, lastName: lastName };
+          }
+
+          return obj;
+        });
+        await AsyncStorage.setItem("data", JSON.stringify(newArr));
+        alert("update succesful");
+      } else {
+        const userDataArray = [userData];
+        await AsyncStorage.setItem("data", JSON.stringify(userDataArray));
+      }
+    } catch (error) {
+      console.log("update error", error);
+    }
+  };
+
+  const deleteData = async () => {
+    try {
+      const existingData = await AsyncStorage.getItem("data");
+
+      if (existingData) {
+        let existingDataArray = JSON.parse(existingData);
+
+        const itemIndex = existingDataArray.findIndex(
+          (data) => data.date === date
+        );
+        if (itemIndex !== -1) {
+          existingDataArray.splice(itemIndex, 1);
+        }
+        await AsyncStorage.setItem("data", JSON.stringify(existingDataArray));
+        setFirstName("");
+        setLastName("");
+        alert("Delete succesful");
+      }
+    } catch (error) {
+      console.log("update error", error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <CalendarProvider
         style={styles.calendarProvider}
         date={date}
         onDateChanged={(date) => {
-          console.log("date:", date);
+          // console.log("date:", date);
           setDate(date);
           showAsyncData();
         }}
@@ -97,6 +146,8 @@ export default function App() {
           value={lastName}
         />
         <Button title="Store" onPress={storeData} />
+        <Button title="Update" onPress={updateData} />
+        <Button title="Delete" onPress={deleteData} />
       </View>
       <StatusBar style="auto" />
     </SafeAreaView>
@@ -127,6 +178,6 @@ const styles = StyleSheet.create({
     width: "100%",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 550,
+    marginBottom: 500,
   },
 });
